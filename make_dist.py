@@ -30,17 +30,32 @@ def get_srcs(filename):
     else:
         return []
 
-def get_figs(filename):
+def get_figs(filename, exts=['.pdf', '.png']):
     import re
 
-    search = re.compile(r'\\figdir/(.*)\}').search
+    search = re.compile(r'\\figdir/(.*[^\}])\}').search
 
     out = subprocess.run(
         r'git grep \figdir/ {}'.format(filename).split(), capture_output=True
     ).stdout.splitlines()
 
-    figs = [ii.decode() for ii in out]
-    figs = ['figures/' + search(ii).groups()[0] for ii in figs]
+    _figs = [ii.decode() for ii in out]
+    _figs = ['figures/' + search(ii).groups()[0] for ii in _figs]
+    figs = []
+    for name in _figs:
+        ext = os.path.splitext(name)[1]
+        if ext and os.path.exists(name):
+            figs.append(name)
+
+        else:
+            for ext in exts:
+                ename = name + ext
+                if os.path.exists(ename):
+                    figs.append(ename)
+                    break
+
+            else:
+                print(f'figure {name} not found!')
 
     return figs
 
