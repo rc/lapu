@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 """
 Copy all files used in a main LaTeX file to a given directory.
+
+Requires git for LaTeX sources version control.
 """
 from argparse import RawDescriptionHelpFormatter, ArgumentParser
 import os
