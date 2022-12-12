@@ -30,6 +30,29 @@ def get_srcs(filename):
     else:
         return []
 
+def _get_arg_of_command(filename, command, ext, single=True):
+    out = subprocess.run(
+        r'git grep {} {}'.format(command, filename).split(), capture_output=True
+    ).stdout.splitlines()
+    srcs = []
+    for _line in out:
+        line = _line.decode().strip()
+        if not line.startswith('%'):
+            srcs.append(line.split('{')[-1][:-1] + ext)
+            if single:
+                break
+
+    return srcs
+
+def get_extra(filename):
+    extra = []
+    extra.extend(_get_arg_of_command(filename, r'\documentclass', '.cls',
+                                     single=True))
+    extra.extend(_get_arg_of_command(filename, r'\bibliographystyle', '.bst',
+                                     single=True))
+    extra.extend(_get_arg_of_command(filename, r'bibliography{', '.bib'))
+    return extra
+
 def get_figs(filename, exts=['.pdf', '.png']):
     import re
 
@@ -66,7 +89,12 @@ def main():
     parser.add_argument('output_dir')
     options = parser.parse_args()
 
-    srcs = [options.main_tex_file] + get_srcs(options.main_tex_file)
+    srcs = (
+        [options.main_tex_file]
+        + get_srcs(options.main_tex_file)
+        + get_extra(options.main_tex_file)
+    )
+
     figs = []
     for src in srcs:
         if src.endswith('.tex'):
