@@ -14,7 +14,7 @@ import soops as so
 
 def get_srcs(filename):
     out = subprocess.run(
-        r'git grep \input {}'.format(filename).split(), capture_output=True
+        r'git grep \\input {}'.format(filename).split(), capture_output=True
     ).stdout.splitlines()
 
     srcs = [ii.decode() for ii in out]
