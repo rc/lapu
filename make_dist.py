@@ -81,6 +81,30 @@ def get_figs(filename, exts=['.pdf', '.png']):
 
     return figs
 
+def copy_with_exts(srcs, indir, exts=None):
+    if exts is None:
+        exts = []
+
+    for src in srcs:
+        so.ensure_path(indir(src))
+        ext = os.path.splitext(src)[1]
+        if ext:
+            try:
+                shutil.copy2(src, indir(src))
+
+            except:
+                pass
+
+        else:
+            for ext in exts:
+                esrc = src + ext
+                try:
+                    shutil.copy2(esrc, indir(esrc))
+                    break
+
+                except:
+                    continue
+
 def main():
     parser = ArgumentParser(description=__doc__.rstrip(),
                             formatter_class=RawDescriptionHelpFormatter)
@@ -101,39 +125,8 @@ def main():
 
     indir = partial(os.path.join, options.output_dir)
 
-    for src in srcs:
-        so.ensure_path(indir(src))
-        try:
-            shutil.copy2(src, indir(src))
-
-        except:
-            src += '.tex'
-            try:
-                shutil.copy2(src, indir(src))
-
-            except:
-                pass
-
-    exts = ['.pdf', '.png']
-    for fig in figs:
-        so.ensure_path(indir(fig))
-        ext = os.path.splitext(fig)[1]
-        if ext:
-            try:
-                shutil.copy2(fig, indir(fig))
-
-            except:
-                pass
-
-        else:
-            for ext in exts:
-                efig = fig + ext
-                try:
-                    shutil.copy2(efig, indir(efig))
-                    break
-
-                except:
-                    continue
+    copy_with_exts(srcs, indir, exts=['.tex', '.inc'])
+    copy_with_exts(figs, indir, exts=['.pdf', '.png'])
 
 if __name__ == '__main__':
     main()
