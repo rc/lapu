@@ -46,11 +46,11 @@ def _get_arg_of_command(filename, command, ext, single=True):
 
 def get_extra(filename):
     extra = []
-    extra.extend(_get_arg_of_command(filename, r'\documentclass', '.cls',
+    extra.extend(_get_arg_of_command(filename, r'\\documentclass', '.cls',
                                      single=True))
-    extra.extend(_get_arg_of_command(filename, r'\bibliographystyle', '.bst',
+    extra.extend(_get_arg_of_command(filename, r'\\bibliographystyle', '.bst',
                                      single=True))
-    extra.extend(_get_arg_of_command(filename, r'bibliography{', '.bib'))
+    extra.extend(_get_arg_of_command(filename, r'\\bibliography{', '.bib'))
     return extra
 
 def get_figs(filename, exts=['.pdf', '.png']):
