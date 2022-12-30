@@ -1,8 +1,13 @@
 #!/usr/bin/env python
-"""
+r"""
 Copy all files used in a main LaTeX file to a given directory.
 
-Requires git for LaTeX sources version control.
+- Requires git for LaTeX sources version control.
+- Figures need to be included as::
+
+  \def\figdir{<dirname>}
+  ...
+  \includegraphics[...]{\figdir/<filename>}
 """
 from argparse import RawDescriptionHelpFormatter, ArgumentParser
 import os
@@ -12,14 +17,28 @@ import subprocess
 
 import soops as so
 
-def get_srcs(filename):
+def _get_arg_of_command(filename, command, ext, single=True):
     out = subprocess.run(
-        r'git grep \\input {}'.format(filename).split(), capture_output=True
+        r'git grep \{} {}'.format(command, filename).split(),
+        capture_output=True
     ).stdout.splitlines()
 
-    srcs = [ii.decode() for ii in out]
-    srcs = [ii.split(r'\input')[1].strip().strip('{').strip('}') for ii in srcs]
+    srcs = []
+    for _line in out:
+        line = _line.decode().strip()
+        if not line.startswith('%'):
+            arg = line.split(command)[1].strip().strip('{')
+            if '}' in arg:
+                arg = arg[:arg.index('}')]
 
+            srcs.append(arg + ext)
+            if single:
+                break
+
+    return srcs
+
+def get_srcs(filename):
+    srcs = _get_arg_of_command(filename, r'\input', '', single=False)
     if len(srcs):
         sub = srcs.copy()
         for src in srcs:
@@ -30,40 +49,20 @@ def get_srcs(filename):
     else:
         return []
 
-def _get_arg_of_command(filename, command, ext, single=True):
-    out = subprocess.run(
-        r'git grep {} {}'.format(command, filename).split(), capture_output=True
-    ).stdout.splitlines()
-    srcs = []
-    for _line in out:
-        line = _line.decode().strip()
-        if not line.startswith('%'):
-            srcs.append(line.split('{')[-1][:-1] + ext)
-            if single:
-                break
-
-    return srcs
-
 def get_extra(filename):
     extra = []
-    extra.extend(_get_arg_of_command(filename, r'\\documentclass', '.cls',
+    extra.extend(_get_arg_of_command(filename, r'\documentclass', '.cls',
                                      single=True))
-    extra.extend(_get_arg_of_command(filename, r'\\bibliographystyle', '.bst',
+    extra.extend(_get_arg_of_command(filename, r'\bibliographystyle', '.bst',
                                      single=True))
-    extra.extend(_get_arg_of_command(filename, r'\\bibliography{', '.bib'))
+    extra.extend(_get_arg_of_command(filename, r'\bibliography{', '.bib',
+                                     single=False))
     return extra
 
 def get_figs(filename, exts=['.pdf', '.png']):
-    import re
-
-    search = re.compile(r'\\figdir/(.*[^\}])\}').search
-
-    out = subprocess.run(
-        r'git grep \figdir/ {}'.format(filename).split(), capture_output=True
-    ).stdout.splitlines()
-
-    _figs = [ii.decode() for ii in out]
-    _figs = ['figures/' + search(ii).groups()[0] for ii in _figs]
+    aux = _get_arg_of_command(filename, r'\figdir', '', single=False)
+    figdir = aux.pop(0)
+    _figs = [os.path.join(figdir, ii[1:]) for ii in aux]
     figs = []
     for name in _figs:
         ext = os.path.splitext(name)[1]
