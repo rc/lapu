@@ -28,10 +28,16 @@ def _get_arg_of_command(filename, command, ext, single=True):
         line = _line.decode().strip()
         if not line.startswith('%'):
             arg = line.split(command)[1].strip().strip('{')
+            if '{' in arg:
+                # Removes optional arguments in [].
+                arg = arg[arg.index('{') + 1:]
             if '}' in arg:
                 arg = arg[:arg.index('}')]
 
-            srcs.append(arg + ext)
+            if not arg.endswith(ext):
+                arg += ext
+
+            srcs.append(arg)
             if single:
                 break
 
