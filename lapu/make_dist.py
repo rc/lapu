@@ -17,7 +17,7 @@ import subprocess
 
 import soops as so
 
-def _get_arg_of_command(filename, command, ext, single=True):
+def _get_arg_of_command(filename, command, ext, single=True, search_def=False):
     out = subprocess.run(
         r'git grep \{} {}'.format(command, filename).split(),
         capture_output=True
@@ -26,7 +26,10 @@ def _get_arg_of_command(filename, command, ext, single=True):
     srcs = []
     for _line in out:
         line = _line.decode().strip()
-        if not line.startswith('%'):
+        if not (
+                line.startswith('%') or
+                (((r'\def' + command) in line) and not search_def)
+        ):
             arg = line.split(command)[1].strip().strip('{')
             if '{' in arg:
                 # Removes optional arguments in [].
