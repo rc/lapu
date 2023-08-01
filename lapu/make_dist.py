@@ -130,6 +130,7 @@ def main():
     parser.add_argument('output_dir')
     options = parser.parse_args()
 
+    figdir = get_figdir(options.main_tex_file)
     srcs = (
         [options.main_tex_file]
         + get_srcs(options.main_tex_file)
@@ -139,7 +140,7 @@ def main():
     figs = []
     for src in srcs:
         if src.endswith('.tex'):
-            figs += get_figs(src)
+            figs += get_figs(src, figdir=figdir)
 
     indir = partial(os.path.join, options.output_dir)
 
