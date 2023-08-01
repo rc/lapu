@@ -68,15 +68,18 @@ def get_extra(filename):
                                      single=False))
     return extra
 
-def get_figs(filename, exts=['.pdf', '.png'], figdir=None):
-    if figdir is None:
-        aux = _get_arg_of_command(filename, r'\figdir', '', single=False)
-        try:
-            figdir = aux.pop(0)
+def get_figdir(filename):
+    aux = _get_arg_of_command(filename, r'\figdir', '', search_def=True)
+    try:
+        figdir = aux.pop(0)
 
-        except IndexError:
-            return []
+    except IndexError:
+        figdir = ''
 
+    return figdir
+
+def get_figs(filename, figdir='', exts=('.pdf', '.png')):
+    aux = _get_arg_of_command(filename, r'\figdir', '', single=False)
     _figs = [os.path.join(figdir, ii[1:]) for ii in aux]
     figs = []
     for name in _figs:
